@@ -79,6 +79,7 @@ render ctx = pure $ view [(appStyle "container")] [
   todoList initialTodos
   ]
         
+foreign import unsafeLog :: forall p e. p -> Eff e Unit
   
 main = do
   log "Running app"
