@@ -1,5 +1,8 @@
 {
-  "name": "ReactNativePureScript",
+  "name": "purescript-react-native-sampleapp",
+  "keywords": [
+    "purescript"
+  ],
   "version": "1.0.0",
   "moduleType": [
     "node"
@@ -12,6 +15,7 @@
   ],
   "dependencies": {
     "purescript-console": "^0.1.0",
-    "purescript-react": "~0.4.1"
+    "purescript-react": "~0.4.1",
+    "purescript-react-native": "../purescript-react-native"
   }
 }
