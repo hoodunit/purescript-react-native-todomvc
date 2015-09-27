@@ -14,11 +14,20 @@ import qualified React.DOM.Props as P
 data Todo = Todo String Boolean
 
 initialTodos = [
-  Todo "Get milk" false,
-  Todo "Return library books" false,
-  Todo "Drink water" true,
-  Todo "Return papers" false,
-  Todo "Call your mother" false
+  Todo "Hack PureScript into Android (using JS mostly)" true,
+  Todo "Display text field using purescript-react" true,
+  Todo "Port SampleApp to PureScript" true,
+  Todo "Pull out bindings as separate library" true,
+  Todo "Add support for ListViews" true,
+  Todo "Display list of todo items" true,
+  Todo "Fix wrapping of long todos" false,
+  Todo "Display completed items as completed" false,
+  Todo "Make items highlightable" false,
+  Todo "Make items completable" false,
+  Todo "Add new todos" false,
+  Todo "Clear completed todos" false,
+  Todo "Filter All/Active/Completed todos" false,
+  Todo "Clean up styling" false
 ]
 
 appName = "PureScriptSampleApp"
