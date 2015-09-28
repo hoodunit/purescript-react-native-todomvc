@@ -36,8 +36,7 @@ appStyleSheet :: StyleSheet
 appStyleSheet = createStyleSheet {
   "container": {
      flex: 1,
-     flexDirection: "column",
-     justifyContent: "center"
+     flexDirection: "column"
      },
   "title": {
      fontSize: 40,
@@ -49,12 +48,12 @@ appStyleSheet = createStyleSheet {
     },
   "todoRow": {
     flexDirection: "column",
-    height: 40,
-    padding: 10,
-    marginBottom: 10
+    justifyContent: "flex-start",
+    flex: 1,
+    paddingHorizontal: 10
     },
   "todoText": {
-    fontSize: 24
+    fontSize: 20
     },
   "separator": {
     backgroundColor: "rgba(0, 0, 0, 0.1)",
