@@ -6,7 +6,7 @@ import Control.Monad.Eff.Console (log)
 import Data.Array (concat)
 import React (ReactElement(), Render(), createClass, spec)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
-import ReactNative.Components (ListViewDataSource(), listView, listViewDataSource, text, view)
+import ReactNative.Components (ListViewDataSource(), listView, listViewDataSource, text, touchableNativeFeedback, view)
 import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), dataSource, renderRow, renderSeparator, renderHeader)
 
 import qualified React.DOM as D
@@ -70,7 +70,7 @@ appStyle key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
 
 todoRow :: forall highlightFn. Todo -> String -> String -> highlightFn -> ReactElement
 todoRow (Todo item completed) sectionId rowId highlightRow = 
-  view [appStyle todoStyle] [text [appStyle "todoText"] [D.text item]]
+  touchableNativeFeedback [] $ view [appStyle todoStyle] [text [appStyle "todoText"] [D.text item]]
   where todoStyle = (if completed then "todoCompleted" else "todo")
 
 todoSeparator :: RenderSeparatorFn
