@@ -7,7 +7,7 @@ import Data.Array (concat)
 import React (ReactElement(), Render(), createClass, spec)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
 import ReactNative.Components (ListViewDataSource(), listView, listViewDataSource, text, view)
-import ReactNative.Props (RenderRowFn(), RenderSeparatorFn(), RenderHeaderFn(), dataSource, renderRow, renderSeparator, renderHeader)
+import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), dataSource, renderRow, renderSeparator, renderHeader)
 
 import qualified React.DOM as D
 import qualified React.DOM.Props as P
@@ -47,35 +47,34 @@ appStyleSheet = createStyleSheet {
     flex: 1,
     flexDirection: "column"
     },
-  "todoRow": {
-    flexDirection: "column",
-    justifyContent: "flex-start",
-    flex: 1,
-    paddingHorizontal: 10
+  "todo": {
+    paddingHorizontal: 10,
+    paddingVertical: 15
+    },
+  "todoCompleted": {
+    paddingHorizontal: 10,
+    paddingVertical: 15,
+    backgroundColor: "#DDDDDD"
     },
   "todoText": {
-    fontSize: 20
+    fontSize: 18
     },
   "separator": {
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
-    height: 1,
-    marginVertical: 10
+    backgroundColor: "rgba(0, 0, 0, 0.15)",
+    height: 1
     }
   }
   
 appStyle :: String -> P.Props
 appStyle key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
 
-todoRow :: RenderRowFn
-todoRow rowData sectionId rowId highlightRow = 
-  view [appStyle "todoRow"] [text [appStyle "todoText"] [D.text rowData]]
+todoRow :: forall highlightFn. Todo -> String -> String -> highlightFn -> ReactElement
+todoRow (Todo item completed) sectionId rowId highlightRow = 
+  view [appStyle todoStyle] [text [appStyle "todoText"] [D.text item]]
+  where todoStyle = (if completed then "todoCompleted" else "todo")
 
 todoSeparator :: RenderSeparatorFn
 todoSeparator sectionId rowId adjacentHighlighted = view [appStyle "separator"] []
-
-todoDataSource :: Array Todo -> ListViewDataSource
-todoDataSource todos = listViewDataSource $ map todoText todos
-  where todoText (Todo text _) = text
 
 todoList :: Array Todo -> ReactElement
 todoList todos = listView 
@@ -83,7 +82,7 @@ todoList todos = listView
    renderRow todoRow,
    renderSeparator todoSeparator,
    renderHeader $ view [appStyle "separator"] [],
-   dataSource $ todoDataSource todos]
+   dataSource $ listViewDataSource todos]
 
 render :: forall props state eff. Render props state eff
 render ctx = pure $ view [(appStyle "container")] [
@@ -96,8 +95,6 @@ foreign import unsafeLog :: forall p e. p -> Eff e Unit
 main = do
   log "Running app"
   registerComponent appName component
-  unsafeLog $ todoList initialTodos
-  unsafeLog $ todoDataSource initialTodos
   where
     component = createClass viewSpec
     viewSpec = (spec unit render)
