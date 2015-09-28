@@ -7,7 +7,7 @@ import Data.Array (concat)
 import React (ReactElement(), Render(), createClass, spec)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
 import ReactNative.Components (ListViewDataSource(), listView, listViewDataSource, text, view)
-import ReactNative.Props (RenderRowFn(), renderRow, dataSource)
+import ReactNative.Props (RenderRowFn(), RenderSeparatorFn(), RenderHeaderFn(), dataSource, renderRow, renderSeparator, renderHeader)
 
 import qualified React.DOM as D
 import qualified React.DOM.Props as P
@@ -68,10 +68,10 @@ appStyle key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
 
 todoRow :: RenderRowFn
 todoRow rowData sectionId rowId highlightRow = 
-  view [appStyle "todoRow"] $ concat [
-    (if rowId == "0" then [view [appStyle "separator"] []] else []),
-    [text [appStyle "todoText"] [D.text rowData],
-     view [appStyle "separator"] []]]
+  view [appStyle "todoRow"] [text [appStyle "todoText"] [D.text rowData]]
+
+todoSeparator :: RenderSeparatorFn
+todoSeparator sectionId rowId adjacentHighlighted = view [appStyle "separator"] []
 
 todoDataSource :: Array Todo -> ListViewDataSource
 todoDataSource todos = listViewDataSource $ map todoText todos
@@ -81,6 +81,8 @@ todoList :: Array Todo -> ReactElement
 todoList todos = listView 
   [appStyle "todoList",
    renderRow todoRow,
+   renderSeparator todoSeparator,
+   renderHeader $ view [appStyle "separator"] [],
    dataSource $ todoDataSource todos]
 
 render :: forall props state eff. Render props state eff
