@@ -5,16 +5,20 @@ import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (log)
 import Data.Array (concat, modifyAt)
 import Data.Int (fromString)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (Maybe(), fromMaybe)
 import React (ReactElement(), Render(), createClass, readState, spec, writeState)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
-import ReactNative.Components (ListViewDataSource(), listView, listViewDataSource, text, touchableNativeFeedback, view)
+import ReactNative.Components (ListViewDataSource(), cloneWithRows, listView, listViewDataSource, text, touchableNativeFeedback, view)
 import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), dataSource, onPress, renderRow, renderSeparator, renderHeader)
 
 import qualified React.DOM as D
 import qualified React.DOM.Props as P
 
+data AppState = AppState { todos :: Array Todo, dataSource :: ListViewDataSource }
 data Todo = Todo String Boolean
+
+instance todoEq :: Eq Todo where
+  eq (Todo t1 c1) (Todo t2 c2) = (t1 == t2) && (c1 == c2)
 
 initialTodos = [
   Todo "Hack PureScript into Android (using JS mostly)" true,
@@ -51,7 +55,8 @@ appStyleSheet = createStyleSheet {
     },
   "todo": {
     paddingHorizontal: 10,
-    paddingVertical: 15
+    paddingVertical: 15,
+    backgroundColor: "#FFFFFF"
     },
   "todoCompleted": {
     paddingHorizontal: 10,
@@ -62,7 +67,7 @@ appStyleSheet = createStyleSheet {
     fontSize: 18
     },
   "separator": {
-    backgroundColor: "rgba(0, 0, 0, 0.15)",
+    backgroundColor: "#CCCCCC",
     height: 1
     }
   }
@@ -77,14 +82,14 @@ toggleTodoAtIndex :: String -> Array Todo -> Array Todo
 toggleTodoAtIndex rowId todos = fromMaybe todos $ do
   index <- fromString rowId
   newTodos <- modifyAt index toggleTodo todos
-  return newTodos
+  return (unsafeLog2 newTodos)
   
 toggleTodo :: Todo -> Todo
 toggleTodo (Todo s complete) = Todo s (not complete)
 
-render :: forall props eff. Render props (Array Todo) eff
+render :: forall props eff. Render props AppState eff
 render ctx = do
-  todos <- readState ctx
+  (AppState state) <- readState ctx
   return $ 
     view [(appStyle "container")] [
       text [(appStyle "title")] [D.text "todos"],
@@ -92,21 +97,24 @@ render ctx = do
                 renderRow todoRow,
                 renderSeparator todoSeparator,
                 renderHeader $ view [appStyle "separator"] [],
-                dataSource $ listViewDataSource todos]]
+                dataSource state.dataSource]]
     where todoRow (Todo item completed) _ rowId _ = 
             touchableNativeFeedback [onPress onPressFn] $ rowView
             where onPressFn _ = do
-                    todos <- readState ctx
-                    writeState ctx $ toggleTodoAtIndex rowId todos
+                    (AppState state) <- readState ctx
+                    let newTodos = toggleTodoAtIndex rowId state.todos
+                    writeState ctx $ AppState { todos: newTodos, dataSource: cloneWithRows state.dataSource newTodos }
                   rowView = view [appStyle todoStyle] [todoText]
                   todoStyle = (if completed then "todoCompleted" else "todo")
                   todoText = text [appStyle "todoText"] [D.text item]
         
 foreign import unsafeLog :: forall p e. p -> Eff e Unit
+foreign import unsafeLog2 :: forall p. p -> p
   
 main = do
   log "Running app"
   registerComponent appName component
   where
     component = createClass viewSpec
-    viewSpec = (spec initialTodos render)
+    viewSpec = (spec initialState render)
+    initialState = AppState { todos: initialTodos, dataSource: listViewDataSource initialTodos }

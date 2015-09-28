@@ -7,3 +7,8 @@ exports.unsafeLog = function(data){
     console.log(data);
   }
 }
+
+exports.unsafeLog2 = function(data){
+  console.log(data);
+  return data;
+}
