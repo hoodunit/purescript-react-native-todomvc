@@ -3,8 +3,10 @@ module Main where
 import Prelude
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (log)
-import Data.Array (concat)
-import React (ReactElement(), Render(), createClass, spec)
+import Data.Array (concat, modifyAt)
+import Data.Int (fromString)
+import Data.Maybe (fromMaybe)
+import React (ReactElement(), Render(), createClass, readState, spec, writeState)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
 import ReactNative.Components (ListViewDataSource(), listView, listViewDataSource, text, touchableNativeFeedback, view)
 import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), dataSource, onPress, renderRow, renderSeparator, renderHeader)
@@ -68,27 +70,37 @@ appStyleSheet = createStyleSheet {
 appStyle :: String -> P.Props
 appStyle key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
 
-todoRow :: forall highlightFn. Todo -> String -> String -> highlightFn -> ReactElement
-todoRow (Todo item completed) sectionId rowId highlightRow = 
-  touchableNativeFeedback [onPress \_ -> unsafeLog "onPress"] $ view [appStyle todoStyle] [text [appStyle "todoText"] [D.text item]]
-  where todoStyle = (if completed then "todoCompleted" else "todo")
-
 todoSeparator :: RenderSeparatorFn
 todoSeparator sectionId rowId adjacentHighlighted = view [appStyle "separator"] []
 
-todoList :: Array Todo -> ReactElement
-todoList todos = listView 
-  [appStyle "todoList",
-   renderRow todoRow,
-   renderSeparator todoSeparator,
-   renderHeader $ view [appStyle "separator"] [],
-   dataSource $ listViewDataSource todos]
+toggleTodoAtIndex :: String -> Array Todo -> Array Todo
+toggleTodoAtIndex rowId todos = fromMaybe todos $ do
+  index <- fromString rowId
+  newTodos <- modifyAt index toggleTodo todos
+  return newTodos
+  
+toggleTodo :: Todo -> Todo
+toggleTodo (Todo s complete) = Todo s (not complete)
 
-render :: forall props state eff. Render props state eff
-render ctx = pure $ view [(appStyle "container")] [
-  text [(appStyle "title")] [D.text "todos"],
-  todoList initialTodos
-  ]
+render :: forall props eff. Render props (Array Todo) eff
+render ctx = do
+  todos <- readState ctx
+  return $ 
+    view [(appStyle "container")] [
+      text [(appStyle "title")] [D.text "todos"],
+      listView [appStyle "todoList",
+                renderRow todoRow,
+                renderSeparator todoSeparator,
+                renderHeader $ view [appStyle "separator"] [],
+                dataSource $ listViewDataSource todos]]
+    where todoRow (Todo item completed) _ rowId _ = 
+            touchableNativeFeedback [onPress onPressFn] $ rowView
+            where onPressFn _ = do
+                    todos <- readState ctx
+                    writeState ctx $ toggleTodoAtIndex rowId todos
+                  rowView = view [appStyle todoStyle] [todoText]
+                  todoStyle = (if completed then "todoCompleted" else "todo")
+                  todoText = text [appStyle "todoText"] [D.text item]
         
 foreign import unsafeLog :: forall p e. p -> Eff e Unit
   
@@ -97,4 +109,4 @@ main = do
   registerComponent appName component
   where
     component = createClass viewSpec
-    viewSpec = (spec unit render)
+    viewSpec = (spec initialTodos render)

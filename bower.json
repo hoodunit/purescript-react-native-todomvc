@@ -17,6 +17,8 @@
     "purescript-console": "^0.1.0",
     "purescript-react": "~0.4.1",
     "purescript-react-native": "../purescript-react-native",
-    "purescript-arrays": "~0.4.2"
+    "purescript-arrays": "~0.4.2",
+    "purescript-integers": "~0.2.1",
+    "purescript-maybe": "~0.3.4"
   }
 }
