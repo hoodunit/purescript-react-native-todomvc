@@ -3,10 +3,11 @@ module Main where
 import Prelude
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (log)
+import Data.Array (concat)
 import React (ReactElement(), Render(), createClass, spec)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
 import ReactNative.Components (ListViewDataSource(), listView, listViewDataSource, text, view)
-import ReactNative.Props (renderRow, dataSource)
+import ReactNative.Props (RenderRowFn(), renderRow, dataSource)
 
 import qualified React.DOM as D
 import qualified React.DOM.Props as P
@@ -65,11 +66,12 @@ appStyleSheet = createStyleSheet {
 appStyle :: String -> P.Props
 appStyle key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
 
-todoRow :: String -> Int -> Int -> Int -> ReactElement
+todoRow :: RenderRowFn
 todoRow rowData sectionId rowId highlightRow = 
-  view [appStyle "todoRow"] [
-    text [appStyle "todoText"] [D.text rowData],
-    view [appStyle "separator"] []]
+  view [appStyle "todoRow"] $ concat [
+    (if rowId == "0" then [view [appStyle "separator"] []] else []),
+    [text [appStyle "todoText"] [D.text rowData],
+     view [appStyle "separator"] []]]
 
 todoDataSource :: Array Todo -> ListViewDataSource
 todoDataSource todos = listViewDataSource $ map todoText todos
