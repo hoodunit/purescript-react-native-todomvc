@@ -3,9 +3,10 @@ module Main where
 import Prelude
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (log)
-import Data.Array ((:), concat, filter, modifyAt)
+import Data.Array ((:), concat, filter, findIndex, length, modifyAt, range, zip)
 import Data.Int (fromString)
 import Data.Maybe (Maybe(), fromMaybe)
+import Data.Tuple (fst, snd)
 import React (ReactElement(), Render(), createClass, readState, spec, transformState, writeState)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
 import ReactNative.Components (ListViewDataSource(), cloneWithRows, listView, listViewDataSource, text, textInput, touchableNativeFeedback, view)
@@ -14,29 +15,36 @@ import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), dataSource, onC
 import qualified React.DOM as D
 import qualified React.DOM.Props as P
 
-data AppState = AppState { newTodo :: String, todos :: Array Todo, dataSource :: ListViewDataSource }
-data Todo = Todo String Boolean
+data AppState = AppState {
+  nextId :: Int, 
+  newTodo :: String, 
+  todos :: Array Todo, 
+  dataSource :: ListViewDataSource, 
+  filter :: Filter
+  }
+data Todo = Todo Int String Boolean
+data Filter = All | Active | Completed
 
 instance todoEq :: Eq Todo where
-  eq (Todo t1 c1) (Todo t2 c2) = (t1 == t2) && (c1 == c2)
+  eq (Todo id1 item1 c1) (Todo id2 item2 c2) = (id1 == id2) && (item1 == item2) && (c1 == c2)
 
 initialTodos = [
-  Todo "Hack PureScript into Android (using JS mostly)" true,
-  Todo "Display text field using purescript-react" true,
-  Todo "Port SampleApp to PureScript" true,
-  Todo "Pull out bindings as separate library" true,
-  Todo "Add support for ListViews" true,
-  Todo "Display list of todo items" true,
-  Todo "Fix wrapping of long todos" true,
-  Todo "Display completed items as completed" true,
-  Todo "Make items highlightable" true,
-  Todo "Make items completable" true,
-  Todo "Add new todos" true,
-  Todo "Clear completed todos" false,
-  Todo "Filter All/Active/Completed todos" false,
-  Todo "Delete todos" false,
-  Todo "Clean up styling" false,
-  Todo "Re-focus input field when adding todo" false
+  Todo 1 "Hack PureScript into Android (using JS mostly)" true,
+  Todo 2 "Display text field using purescript-react" true,
+  Todo 3 "Port SampleApp to PureScript" true,
+  Todo 4 "Pull out bindings as separate library" true,
+  Todo 5 "Add support for ListViews" true,
+  Todo 6 "Display list of todo items" true,
+  Todo 7 "Fix wrapping of long todos" true,
+  Todo 8 "Display completed items as completed" true,
+  Todo 9 "Make items highlightable" true,
+  Todo 10 "Make items completable" true,
+  Todo 12 "Add new todos" true,
+  Todo 13 "Clear completed todos" false,
+  Todo 14 "Filter All/Active/Completed todos" false,
+  Todo 15 "Delete todos" false,
+  Todo 16 "Clean up styling" false,
+  Todo 17 "Re-focus input field when adding todo" false
 ]
 
 appName = "PureScriptSampleApp"
@@ -79,39 +87,64 @@ appStyleSheet = createStyleSheet {
   "bottomBar": {
     paddingVertical: 15,
     paddingHorizontal: 15,
-    flexDirection: "column",
-    alignSelf: "flex-end"
+    flexDirection: "row",
+    alignItems: "stretch"
+    },
+  "filters": {
+    flexDirection: "row",
+    alignItems: "stretch",
+    flex: 1
+    },
+  "filter": {
+    marginHorizontal: 5
     }
   }
   
 appStyle :: String -> P.Props
 appStyle key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
 
+getId :: Todo -> Int
+getId (Todo id _ _) = id
+
 todoSeparator :: RenderSeparatorFn
 todoSeparator sectionId rowId adjacentHighlighted = view [appStyle "separator"] []
 
-toggleTodoAtIndex :: String -> AppState -> AppState
-toggleTodoAtIndex rowId (AppState state) = fromMaybe (AppState state) $ do
-  index <- fromString rowId
-  newTodos <- modifyAt index toggleTodo state.todos
-  return $ AppState $ state {todos = newTodos, dataSource = cloneWithRows state.dataSource newTodos}
+toggleTodoWithId :: Int -> AppState -> AppState
+toggleTodoWithId id (AppState state) = fromMaybe (AppState state) $ do
+  index <- findIndex (((==) id) <<< getId) state.todos
+  newTodos <- modifyAt (unsafeLog2 index) toggleTodo state.todos
+  return $ AppState $ state { todos = newTodos, dataSource = updateDataSource (AppState state) newTodos}
   
 toggleTodo :: Todo -> Todo
-toggleTodo (Todo s complete) = Todo s (not complete)
+toggleTodo (Todo id s complete) = Todo id s (not complete)
 
 addTodo :: AppState -> AppState
-addTodo (AppState state) = AppState {newTodo: "", todos: newTodos, dataSource: newDataSource}
-  where newTodos = (Todo state.newTodo false) : state.todos
-        newDataSource = cloneWithRows state.dataSource newTodos
+addTodo (AppState state) = AppState $ state { nextId = state.nextId + 1, newTodo = "", todos = newTodos, dataSource = newDataSource }
+  where newTodos = (Todo state.nextId state.newTodo false) : state.todos
+        newDataSource = updateDataSource (AppState state) newTodos
         
 updateNewTodo :: String -> AppState -> AppState
-updateNewTodo newTodo (AppState state) = AppState state {newTodo = newTodo}
+updateNewTodo newTodo (AppState state) = AppState state { newTodo = newTodo }
 
 clearCompleted :: AppState -> AppState
 clearCompleted (AppState state) = (AppState $ state { todos = newTodos, dataSource = newDataSource })
   where newTodos = filter notCompleted state.todos
-        newDataSource = cloneWithRows state.dataSource newTodos
-        notCompleted (Todo _ completed) = not completed
+        newDataSource = updateDataSource (AppState state) newTodos
+        notCompleted (Todo _ _ completed) = not completed
+        
+filterTodos :: Filter -> AppState -> AppState
+filterTodos filter (AppState state) = AppState $ stateWithFilter { dataSource = newDataSource }
+  where stateWithFilter = state { filter = filter }
+        newDataSource = updateDataSource (AppState stateWithFilter) state.todos
+
+updateDataSource :: AppState -> Array Todo -> ListViewDataSource
+updateDataSource (AppState state) todos = cloneWithRows state.dataSource filteredTodos
+  where filteredTodos = filter (applyFilter state.filter) todos
+
+applyFilter :: Filter -> Todo -> Boolean
+applyFilter All _ = true
+applyFilter Active (Todo _ _ c) = not c
+applyFilter Completed (Todo _ _ c) = c
 
 render :: forall props eff. Render props AppState eff
 render ctx = do
@@ -130,14 +163,19 @@ render ctx = do
                 renderHeader $ view [appStyle "separator"] [],
                 dataSource state.dataSource],
       view [appStyle "bottomBar"] [
+        view [appStyle "filters"] [
+          text [appStyle "filter", onPress \_ -> transformState ctx (filterTodos All)] [D.text "All"], 
+          text [appStyle "filter", onPress \_ -> transformState ctx (filterTodos Active)] [D.text "Active"], 
+          text [appStyle "filter", onPress \_ -> transformState ctx (filterTodos Completed)] [D.text "Completed"]],
         text [appStyle "clearCompleted", onPress \_ -> transformState ctx clearCompleted] [D.text "Clear completed"]]]
     where 
-      todoRow (Todo item completed) _ rowId _ = touchableNativeFeedback [onPress onPressFn] $ rowView
+      todoRow (Todo id item completed) _ rowId _ = touchableNativeFeedback [onPress onPressFn] $ rowView
         where
           rowView = view [appStyle todoStyle] [todoText]
           todoStyle = (if completed then "todoCompleted" else "todo")
           todoText = text [appStyle "todoText"] [D.text item]
-          onPressFn _ = transformState ctx (toggleTodoAtIndex rowId)
+          onPressFn _ = transformState ctx (toggleTodoWithId (unsafeLog2 id))
+
         
 foreign import unsafeLog :: forall p e. p -> Eff e Unit
 foreign import unsafeLog2 :: forall p. p -> p
@@ -148,4 +186,5 @@ main = do
   where
     component = createClass viewSpec
     viewSpec = (spec initialState render)
-    initialState = AppState { newTodo: "", todos: initialTodos, dataSource: listViewDataSource initialTodos }
+    dataSource = listViewDataSource initialTodos
+    initialState = AppState { nextId: 18, newTodo: "", todos: initialTodos, dataSource: dataSource, filter: All }
