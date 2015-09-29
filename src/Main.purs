@@ -3,7 +3,7 @@ module Main where
 import Prelude
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (log)
-import Data.Array ((:), concat, modifyAt)
+import Data.Array ((:), concat, filter, modifyAt)
 import Data.Int (fromString)
 import Data.Maybe (Maybe(), fromMaybe)
 import React (ReactElement(), Render(), createClass, readState, spec, transformState, writeState)
@@ -75,6 +75,12 @@ appStyleSheet = createStyleSheet {
   "separator": {
     backgroundColor: "#CCCCCC",
     height: 1
+    },
+  "bottomBar": {
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    flexDirection: "column",
+    alignSelf: "flex-end"
     }
   }
   
@@ -101,6 +107,12 @@ addTodo (AppState state) = AppState {newTodo: "", todos: newTodos, dataSource: n
 updateNewTodo :: String -> AppState -> AppState
 updateNewTodo newTodo (AppState state) = AppState state {newTodo = newTodo}
 
+clearCompleted :: AppState -> AppState
+clearCompleted (AppState state) = (AppState $ state { todos = newTodos, dataSource = newDataSource })
+  where newTodos = filter notCompleted state.todos
+        newDataSource = cloneWithRows state.dataSource newTodos
+        notCompleted (Todo _ completed) = not completed
+
 render :: forall props eff. Render props AppState eff
 render ctx = do
   (AppState state) <- readState ctx
@@ -116,7 +128,9 @@ render ctx = do
                 renderRow todoRow,
                 renderSeparator todoSeparator,
                 renderHeader $ view [appStyle "separator"] [],
-                dataSource state.dataSource]]
+                dataSource state.dataSource],
+      view [appStyle "bottomBar"] [
+        text [appStyle "clearCompleted", onPress \_ -> transformState ctx clearCompleted] [D.text "Clear completed"]]]
     where 
       todoRow (Todo item completed) _ rowId _ = touchableNativeFeedback [onPress onPressFn] $ rowView
         where
