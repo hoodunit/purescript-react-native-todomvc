@@ -8,7 +8,7 @@ import Data.Int (fromString)
 import Data.Maybe (Maybe(), fromMaybe)
 import React (ReactElement(), Render(), createClass, readState, spec, writeState)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
-import ReactNative.Components (ListViewDataSource(), cloneWithRows, listView, listViewDataSource, text, touchableNativeFeedback, view)
+import ReactNative.Components (ListViewDataSource(), cloneWithRows, listView, listViewDataSource, text, textInput, touchableNativeFeedback, view)
 import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), dataSource, onPress, renderRow, renderSeparator, renderHeader)
 
 import qualified React.DOM as D
@@ -49,6 +49,10 @@ appStyleSheet = createStyleSheet {
      fontSize: 40,
      textAlign: "center"
      },
+  "todoInput": {
+    fontSize: 18,
+    paddingHorizontal: 10
+    },
   "todoList": {
     flex: 1,
     flexDirection: "column"
@@ -92,7 +96,8 @@ render ctx = do
   (AppState state) <- readState ctx
   return $ 
     view [(appStyle "container")] [
-      text [(appStyle "title")] [D.text "todos"],
+      text [appStyle "title"] [D.text "todos"],
+      textInput [appStyle "todoInput", P.placeholder "What needs to be done?"],
       listView [appStyle "todoList",
                 renderRow todoRow,
                 renderSeparator todoSeparator,
