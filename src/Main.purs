@@ -3,18 +3,18 @@ module Main where
 import Prelude
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (log)
-import Data.Array (concat, modifyAt)
+import Data.Array ((:), concat, modifyAt)
 import Data.Int (fromString)
 import Data.Maybe (Maybe(), fromMaybe)
-import React (ReactElement(), Render(), createClass, readState, spec, writeState)
+import React (ReactElement(), Render(), createClass, readState, spec, transformState, writeState)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
 import ReactNative.Components (ListViewDataSource(), cloneWithRows, listView, listViewDataSource, text, textInput, touchableNativeFeedback, view)
-import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), dataSource, onPress, renderRow, renderSeparator, renderHeader)
+import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), dataSource, onChangeText, onPress, onSubmitEditing, renderRow, renderSeparator, renderHeader)
 
 import qualified React.DOM as D
 import qualified React.DOM.Props as P
 
-data AppState = AppState { todos :: Array Todo, dataSource :: ListViewDataSource }
+data AppState = AppState { newTodo :: String, todos :: Array Todo, dataSource :: ListViewDataSource }
 data Todo = Todo String Boolean
 
 instance todoEq :: Eq Todo where
@@ -82,14 +82,22 @@ appStyle key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
 todoSeparator :: RenderSeparatorFn
 todoSeparator sectionId rowId adjacentHighlighted = view [appStyle "separator"] []
 
-toggleTodoAtIndex :: String -> Array Todo -> Array Todo
-toggleTodoAtIndex rowId todos = fromMaybe todos $ do
+toggleTodoAtIndex :: String -> AppState -> AppState
+toggleTodoAtIndex rowId (AppState state) = fromMaybe (AppState state) $ do
   index <- fromString rowId
-  newTodos <- modifyAt index toggleTodo todos
-  return (unsafeLog2 newTodos)
+  newTodos <- modifyAt index toggleTodo state.todos
+  return $ AppState $ state {todos = newTodos, dataSource = cloneWithRows state.dataSource newTodos}
   
 toggleTodo :: Todo -> Todo
 toggleTodo (Todo s complete) = Todo s (not complete)
+
+addTodo :: AppState -> AppState
+addTodo (AppState state) = AppState {newTodo: "", todos: newTodos, dataSource: newDataSource}
+  where newTodos = (Todo state.newTodo false) : state.todos
+        newDataSource = cloneWithRows state.dataSource newTodos
+        
+updateNewTodo :: String -> AppState -> AppState
+updateNewTodo newTodo (AppState state) = AppState state {newTodo = newTodo}
 
 render :: forall props eff. Render props AppState eff
 render ctx = do
@@ -97,21 +105,23 @@ render ctx = do
   return $ 
     view [(appStyle "container")] [
       text [appStyle "title"] [D.text "todos"],
-      textInput [appStyle "todoInput", P.placeholder "What needs to be done?"],
+      textInput [appStyle "todoInput", 
+                 P.value state.newTodo,
+                 P.placeholder "What needs to be done?",
+                 onChangeText \newTodo -> transformState ctx (updateNewTodo newTodo),
+                 onSubmitEditing \_ -> transformState ctx addTodo],
       listView [appStyle "todoList",
                 renderRow todoRow,
                 renderSeparator todoSeparator,
                 renderHeader $ view [appStyle "separator"] [],
                 dataSource state.dataSource]]
-    where todoRow (Todo item completed) _ rowId _ = 
-            touchableNativeFeedback [onPress onPressFn] $ rowView
-            where onPressFn _ = do
-                    (AppState state) <- readState ctx
-                    let newTodos = toggleTodoAtIndex rowId state.todos
-                    writeState ctx $ AppState { todos: newTodos, dataSource: cloneWithRows state.dataSource newTodos }
-                  rowView = view [appStyle todoStyle] [todoText]
-                  todoStyle = (if completed then "todoCompleted" else "todo")
-                  todoText = text [appStyle "todoText"] [D.text item]
+    where 
+      todoRow (Todo item completed) _ rowId _ = touchableNativeFeedback [onPress onPressFn] $ rowView
+        where
+          rowView = view [appStyle todoStyle] [todoText]
+          todoStyle = (if completed then "todoCompleted" else "todo")
+          todoText = text [appStyle "todoText"] [D.text item]
+          onPressFn _ = transformState ctx (toggleTodoAtIndex rowId)
         
 foreign import unsafeLog :: forall p e. p -> Eff e Unit
 foreign import unsafeLog2 :: forall p. p -> p
@@ -122,4 +132,4 @@ main = do
   where
     component = createClass viewSpec
     viewSpec = (spec initialState render)
-    initialState = AppState { todos: initialTodos, dataSource: listViewDataSource initialTodos }
+    initialState = AppState { newTodo: "", todos: initialTodos, dataSource: listViewDataSource initialTodos }
