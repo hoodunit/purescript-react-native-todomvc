@@ -31,10 +31,12 @@ initialTodos = [
   Todo "Display completed items as completed" true,
   Todo "Make items highlightable" true,
   Todo "Make items completable" true,
-  Todo "Add new todos" false,
+  Todo "Add new todos" true,
   Todo "Clear completed todos" false,
   Todo "Filter All/Active/Completed todos" false,
-  Todo "Clean up styling" false
+  Todo "Delete todos" false,
+  Todo "Clean up styling" false,
+  Todo "Re-focus input field when adding todo" false
 ]
 
 appName = "PureScriptSampleApp"
