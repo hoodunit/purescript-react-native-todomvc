@@ -23,10 +23,15 @@ data AppState = AppState {
   filter :: Filter
   }
 data Todo = Todo Int String Boolean
-data Filter = All | Active | Completed
-
 instance todoEq :: Eq Todo where
   eq (Todo id1 item1 c1) (Todo id2 item2 c2) = (id1 == id2) && (item1 == item2) && (c1 == c2)
+  
+data Filter = All | Active | Completed
+instance eqFilter :: Eq Filter where
+  eq All       All       = true
+  eq Active    Active    = true
+  eq Completed Completed = true
+  eq _         _         = false
 
 initialTodos = [
   Todo 1 "Hack PureScript into Android (using JS mostly)" true,
@@ -68,8 +73,9 @@ appStyleSheet = createStyleSheet {
   "newTodo": {
     fontSize: 18,
     paddingHorizontal: 10,
+    height: 64,
     backgroundColor: todoBackgroundColor,
-    textDecorationColor: borderColor,
+    textDecorationColor: fontColorFaded,
     borderTopColor: borderColor,
     borderTopWidth: 1,
     borderBottomColor: borderColor,
@@ -98,7 +104,7 @@ appStyleSheet = createStyleSheet {
     height: 1
     },
   "bottomBar": {
-    paddingVertical: 15,
+    paddingVertical: 10,
     paddingHorizontal: 15,
     borderTopColor: borderColor,
     borderTopWidth: 1,
@@ -112,10 +118,22 @@ appStyleSheet = createStyleSheet {
     flex: 1
     },
   "filter": {
-    marginHorizontal: 5
+    marginHorizontal: 5,
+    padding: 5
+    },
+  "activeFilter": {
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: "rgba(175, 47, 47, 0.2)",
+    borderStyle: "solid",
+    padding: 5,
+    borderRadius: 3
+    },
+  "clearCompleted": {
+    margin: 5
     }
   }
- 
+
 fontColorDefault = "#000000" 
 fontColorFaded = "#D9D9D9" 
 backgroundColor = "#F5F5F5"
@@ -186,7 +204,10 @@ render ctx = do
                 renderHeader $ view [appStyle "separator"] [],
                 dataSource state.dataSource],
       view [appStyle "bottomBar"] [
-        view [appStyle "filters"] [filterButton ctx All, filterButton ctx Active, filterButton ctx Completed],
+        view [appStyle "filters"] [
+           filterButton ctx state.filter All, 
+           filterButton ctx state.filter Active,
+           filterButton ctx state.filter Completed],
         text [appStyle "clearCompleted", onPress \_ -> transformState ctx clearCompleted] [D.text "Clear completed"]]]
     where 
       todoRow (Todo id item completed) _ _ _ = touchableNativeFeedback [onPress onPressFn] $ rowView
@@ -195,8 +216,11 @@ render ctx = do
           todoText = text [appStyle (if completed then "todoTextCompleted" else "todoText")] [D.text item]
           onPressFn _ = transformState ctx (toggleTodoWithId (unsafeLog2 id))
           
-filterButton :: forall props. ReactThis props AppState -> Filter -> ReactElement
-filterButton ctx filter = text [appStyle "filter", onPress \_ -> transformState ctx (filterTodos filter)] [D.text filterText]
+filterButton :: forall props. ReactThis props AppState -> Filter -> Filter -> ReactElement
+filterButton ctx activeFilter filter = view [
+  appStyle (if activeFilter == filter then "activeFilter" else "filter"),
+  onPress \_ -> transformState ctx (filterTodos filter)
+  ] [text [] [D.text filterText]]
   where filterText = case filter of 
           All -> "All"
           Active -> "Active"
