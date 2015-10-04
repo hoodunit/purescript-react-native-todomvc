@@ -3,7 +3,7 @@ module Main where
 import Prelude
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (log)
-import Data.Array ((:), concat, filter, findIndex, length, modifyAt, range, zip)
+import Data.Array ((:), concat, filter, findIndex, length, modifyAt, range, sortBy, zip)
 import Data.Int (fromString)
 import Data.Maybe (Maybe(), fromMaybe)
 import Data.Tuple (fst, snd)
@@ -40,8 +40,8 @@ initialTodos = [
   Todo 9 "Make items highlightable" true,
   Todo 10 "Make items completable" true,
   Todo 12 "Add new todos" true,
-  Todo 13 "Clear completed todos" false,
-  Todo 14 "Filter All/Active/Completed todos" false,
+  Todo 13 "Clear completed todos" true,
+  Todo 14 "Filter All/Active/Completed todos" true,
   Todo 15 "Delete todos" false,
   Todo 16 "Clean up styling" false,
   Todo 17 "Re-focus input field when adding todo" false
@@ -113,33 +113,34 @@ toggleTodoWithId :: Int -> AppState -> AppState
 toggleTodoWithId id (AppState state) = fromMaybe (AppState state) $ do
   index <- findIndex (((==) id) <<< getId) state.todos
   newTodos <- modifyAt (unsafeLog2 index) toggleTodo state.todos
-  return $ AppState $ state { todos = newTodos, dataSource = updateDataSource (AppState state) newTodos}
+  return $ updateDataSource $ AppState $ state { todos = newTodos }
   
 toggleTodo :: Todo -> Todo
 toggleTodo (Todo id s complete) = Todo id s (not complete)
 
 addTodo :: AppState -> AppState
-addTodo (AppState state) = AppState $ state { nextId = state.nextId + 1, newTodo = "", todos = newTodos, dataSource = newDataSource }
+addTodo (AppState state) = updateDataSource $ AppState $ state { nextId = state.nextId + 1, newTodo = "", todos = newTodos }
   where newTodos = (Todo state.nextId state.newTodo false) : state.todos
-        newDataSource = updateDataSource (AppState state) newTodos
         
 updateNewTodo :: String -> AppState -> AppState
 updateNewTodo newTodo (AppState state) = AppState state { newTodo = newTodo }
 
 clearCompleted :: AppState -> AppState
-clearCompleted (AppState state) = (AppState $ state { todos = newTodos, dataSource = newDataSource })
+clearCompleted (AppState state) = updateDataSource $ AppState $ state { todos = newTodos }
   where newTodos = filter notCompleted state.todos
-        newDataSource = updateDataSource (AppState state) newTodos
         notCompleted (Todo _ _ completed) = not completed
         
 filterTodos :: Filter -> AppState -> AppState
-filterTodos filter (AppState state) = AppState $ stateWithFilter { dataSource = newDataSource }
-  where stateWithFilter = state { filter = filter }
-        newDataSource = updateDataSource (AppState stateWithFilter) state.todos
+filterTodos filter (AppState state) = updateDataSource $ AppState $ state { filter = filter }
+        
+todoOrdering :: Todo -> Todo -> Ordering
+todoOrdering (Todo _ _ true) (Todo _ _ false) = GT
+todoOrdering (Todo _ _ false) (Todo _ _ true) = LT
+todoOrdering (Todo id1 _ _) (Todo id2 _ _) = if id1 < id2 then LT else GT
 
-updateDataSource :: AppState -> Array Todo -> ListViewDataSource
-updateDataSource (AppState state) todos = cloneWithRows state.dataSource filteredTodos
-  where filteredTodos = filter (applyFilter state.filter) todos
+updateDataSource :: AppState -> AppState
+updateDataSource (AppState state) = AppState $ state { dataSource = cloneWithRows state.dataSource filteredTodos }
+  where filteredTodos = sortBy todoOrdering $ filter (applyFilter state.filter) state.todos
 
 applyFilter :: Filter -> Todo -> Boolean
 applyFilter All _ = true
@@ -175,7 +176,6 @@ render ctx = do
           todoStyle = (if completed then "todoCompleted" else "todo")
           todoText = text [appStyle "todoText"] [D.text item]
           onPressFn _ = transformState ctx (toggleTodoWithId (unsafeLog2 id))
-
         
 foreign import unsafeLog :: forall p e. p -> Eff e Unit
 foreign import unsafeLog2 :: forall p. p -> p
@@ -187,4 +187,4 @@ main = do
     component = createClass viewSpec
     viewSpec = (spec initialState render)
     dataSource = listViewDataSource initialTodos
-    initialState = AppState { nextId: 18, newTodo: "", todos: initialTodos, dataSource: dataSource, filter: All }
+    initialState = updateDataSource $ AppState { nextId: 18, newTodo: "", todos: initialTodos, dataSource: dataSource, filter: All }
