@@ -7,7 +7,7 @@ import Data.Array ((:), concat, filter, findIndex, length, modifyAt, range, sort
 import Data.Int (fromString)
 import Data.Maybe (Maybe(), fromMaybe)
 import Data.Tuple (fst, snd)
-import React (ReactElement(), Render(), createClass, readState, spec, transformState, writeState)
+import React (ReactElement(), ReactThis(), Render(), createClass, readState, spec, transformState, writeState)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
 import ReactNative.Components (ListViewDataSource(), cloneWithRows, listView, listViewDataSource, text, textInput, touchableNativeFeedback, view)
 import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), dataSource, onChangeText, onPress, onSubmitEditing, renderRow, renderSeparator, renderHeader)
@@ -53,43 +53,54 @@ appStyleSheet :: StyleSheet
 appStyleSheet = createStyleSheet {
   "container": {
      flex: 1,
-     flexDirection: "column"
+     flexDirection: "column",
+     backgroundColor: backgroundColor
      },
   "title": {
      fontSize: 50,
      color: "rgba(175, 47, 47, 0.15)",
      textAlign: "center"
      },
-  "todoInput": {
-    fontSize: 18,
-    paddingHorizontal: 10
-    },
   "todoList": {
     flex: 1,
     flexDirection: "column"
     },
+  "newTodo": {
+    fontSize: 18,
+    paddingHorizontal: 10,
+    backgroundColor: todoBackgroundColor,
+    textDecorationColor: borderColor,
+    borderTopColor: borderColor,
+    borderTopWidth: 1,
+    borderBottomColor: borderColor,
+    borderBottomWidth: 1
+    },
   "todo": {
     paddingHorizontal: 10,
     paddingVertical: 15,
-    backgroundColor: "#FFFFFF"
+    backgroundColor: todoBackgroundColor
     },
   "todoCompleted": {
     paddingHorizontal: 10,
     paddingVertical: 15,
-    backgroundColor: "#DDDDDD"
+    backgroundColor: todoBackgroundColor
     },
   "todoText": {
-    fontSize: 18
+    fontSize: 18,
+    color: "#000000"
     },
   "separator": {
-    backgroundColor: "#CCCCCC",
+    backgroundColor: borderColor,
     height: 1
     },
   "bottomBar": {
     paddingVertical: 15,
     paddingHorizontal: 15,
+    borderTopColor: borderColor,
+    borderTopWidth: 1,
     flexDirection: "row",
-    alignItems: "stretch"
+    alignItems: "stretch",
+    backgroundColor: todoBackgroundColor
     },
   "filters": {
     flexDirection: "row",
@@ -100,6 +111,10 @@ appStyleSheet = createStyleSheet {
     marginHorizontal: 5
     }
   }
+  
+backgroundColor = "#F5F5F5"
+todoBackgroundColor = "#FFFFFF"
+borderColor = "#EDEDED"
   
 appStyle :: String -> P.Props
 appStyle key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
@@ -154,7 +169,7 @@ render ctx = do
   return $ 
     view [(appStyle "container")] [
       text [appStyle "title"] [D.text "todos"],
-      textInput [appStyle "todoInput", 
+      textInput [appStyle "newTodo", 
                  P.value state.newTodo,
                  P.placeholder "What needs to be done?",
                  onChangeText \newTodo -> transformState ctx (updateNewTodo newTodo),
@@ -165,18 +180,22 @@ render ctx = do
                 renderHeader $ view [appStyle "separator"] [],
                 dataSource state.dataSource],
       view [appStyle "bottomBar"] [
-        view [appStyle "filters"] [
-          text [appStyle "filter", onPress \_ -> transformState ctx (filterTodos All)] [D.text "All"], 
-          text [appStyle "filter", onPress \_ -> transformState ctx (filterTodos Active)] [D.text "Active"], 
-          text [appStyle "filter", onPress \_ -> transformState ctx (filterTodos Completed)] [D.text "Completed"]],
+        view [appStyle "filters"] [filterButton ctx All, filterButton ctx Active, filterButton ctx Completed],
         text [appStyle "clearCompleted", onPress \_ -> transformState ctx clearCompleted] [D.text "Clear completed"]]]
     where 
-      todoRow (Todo id item completed) _ rowId _ = touchableNativeFeedback [onPress onPressFn] $ rowView
+      todoRow (Todo id item completed) _ _ _ = touchableNativeFeedback [onPress onPressFn] $ rowView
         where
           rowView = view [appStyle todoStyle] [todoText]
           todoStyle = (if completed then "todoCompleted" else "todo")
           todoText = text [appStyle "todoText"] [D.text item]
           onPressFn _ = transformState ctx (toggleTodoWithId (unsafeLog2 id))
+          
+filterButton :: forall props. ReactThis props AppState -> Filter -> ReactElement
+filterButton ctx filter = text [appStyle "filter", onPress \_ -> transformState ctx (filterTodos filter)] [D.text filterText]
+  where filterText = case filter of 
+          All -> "All"
+          Active -> "Active"
+          Completed -> "Completed"
         
 foreign import unsafeLog :: forall p e. p -> Eff e Unit
 foreign import unsafeLog2 :: forall p. p -> p
