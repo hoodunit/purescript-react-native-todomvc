@@ -87,7 +87,11 @@ appStyleSheet = createStyleSheet {
     },
   "todoText": {
     fontSize: 18,
-    color: "#000000"
+    color: fontColorDefault
+    },
+  "todoTextCompleted": {
+    fontSize: 18,
+    color: fontColorFaded
     },
   "separator": {
     backgroundColor: borderColor,
@@ -111,7 +115,9 @@ appStyleSheet = createStyleSheet {
     marginHorizontal: 5
     }
   }
-  
+ 
+fontColorDefault = "#000000" 
+fontColorFaded = "#D9D9D9" 
 backgroundColor = "#F5F5F5"
 todoBackgroundColor = "#FFFFFF"
 borderColor = "#EDEDED"
@@ -185,9 +191,8 @@ render ctx = do
     where 
       todoRow (Todo id item completed) _ _ _ = touchableNativeFeedback [onPress onPressFn] $ rowView
         where
-          rowView = view [appStyle todoStyle] [todoText]
-          todoStyle = (if completed then "todoCompleted" else "todo")
-          todoText = text [appStyle "todoText"] [D.text item]
+          rowView = view [appStyle (if completed then "todoCompleted" else "todo")] [todoText]
+          todoText = text [appStyle (if completed then "todoTextCompleted" else "todoText")] [D.text item]
           onPressFn _ = transformState ctx (toggleTodoWithId (unsafeLog2 id))
           
 filterButton :: forall props. ReactThis props AppState -> Filter -> ReactElement
