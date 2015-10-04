@@ -56,7 +56,8 @@ appStyleSheet = createStyleSheet {
      flexDirection: "column"
      },
   "title": {
-     fontSize: 40,
+     fontSize: 50,
+     color: "rgba(175, 47, 47, 0.15)",
      textAlign: "center"
      },
   "todoInput": {
