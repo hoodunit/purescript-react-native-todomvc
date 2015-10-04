@@ -217,10 +217,10 @@ render ctx = do
           onPressFn _ = transformState ctx (toggleTodoWithId (unsafeLog2 id))
           
 filterButton :: forall props. ReactThis props AppState -> Filter -> Filter -> ReactElement
-filterButton ctx activeFilter filter = view [
-  appStyle (if activeFilter == filter then "activeFilter" else "filter"),
-  onPress \_ -> transformState ctx (filterTodos filter)
-  ] [text [] [D.text filterText]]
+filterButton ctx activeFilter filter = 
+  view [appStyle (if activeFilter == filter then "activeFilter" else "filter")] [
+    text [onPress \_ -> transformState ctx (filterTodos filter)] [
+       D.text filterText]]
   where filterText = case filter of 
           All -> "All"
           Active -> "Active"
