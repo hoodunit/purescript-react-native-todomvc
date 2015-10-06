@@ -70,16 +70,23 @@ appStyleSheet = createStyleSheet {
     flex: 1,
     flexDirection: "column"
     },
-  "newTodo": {
+  "newTodoContainer": {
     fontSize: 18,
     paddingHorizontal: 10,
-    height: 64,
+    height: 56,
     backgroundColor: todoBackgroundColor,
     textDecorationColor: fontColorFaded,
     borderTopColor: borderColor,
     borderTopWidth: 1,
     borderBottomColor: borderColor,
     borderBottomWidth: 1
+    },
+  "newTodo": {
+    fontSize: 18,
+    paddingHorizontal: 10,
+    flex: 1,
+    backgroundColor: todoBackgroundColor,
+    textDecorationColor: fontColorFaded
     },
   "todo": {
     paddingHorizontal: 10,
@@ -193,11 +200,12 @@ render ctx = do
   return $ 
     view [(appStyle "container")] [
       text [appStyle "title"] [D.text "todos"],
-      textInput [appStyle "newTodo", 
-                 P.value state.newTodo,
-                 P.placeholder "What needs to be done?",
-                 onChangeText \newTodo -> transformState ctx (updateNewTodo newTodo),
-                 onSubmitEditing \_ -> transformState ctx addTodo],
+      view [appStyle "newTodoContainer"] [
+        textInput [appStyle "newTodo", 
+                   P.value state.newTodo,
+                   P.placeholder "What needs to be done?",
+                   onChangeText \newTodo -> transformState ctx (updateNewTodo newTodo),
+                   onSubmitEditing \_ -> transformState ctx addTodo]],
       listView [appStyle "todoList",
                 renderRow todoRow,
                 renderSeparator todoSeparator,
