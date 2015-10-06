@@ -9,8 +9,8 @@ import Data.Maybe (Maybe(), fromMaybe)
 import Data.Tuple (fst, snd)
 import React (ReactElement(), ReactThis(), Render(), createClass, readState, spec, transformState, writeState)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
-import ReactNative.Components (ListViewDataSource(), cloneWithRows, listView, listViewDataSource, text, textInput, touchableNativeFeedback, view)
-import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), dataSource, onChangeText, onPress, onSubmitEditing, renderRow, renderSeparator, renderHeader)
+import ReactNative.Components (ListViewDataSource(), cloneWithRows, listView, listViewDataSource, text, textInput, touchableHighlight, view)
+import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), background, dataSource, onChangeText, onPress, onPressIn, onPressOut, onSubmitEditing, renderRow, renderSeparator, renderHeader)
 
 import qualified React.DOM as D
 import qualified React.DOM.Props as P
@@ -210,7 +210,7 @@ render ctx = do
            filterButton ctx state.filter Completed],
         text [appStyle "clearCompleted", onPress \_ -> transformState ctx clearCompleted] [D.text "Clear completed"]]]
     where 
-      todoRow (Todo id item completed) _ _ _ = touchableNativeFeedback [onPress onPressFn] $ rowView
+      todoRow (Todo id item completed) _ _ _ = touchableHighlight [onPress onPressFn] $ rowView
         where
           rowView = view [appStyle (if completed then "todoCompleted" else "todo")] [todoText]
           todoText = text [appStyle (if completed then "todoTextCompleted" else "todoText")] [D.text item]
