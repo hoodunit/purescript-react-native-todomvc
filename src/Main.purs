@@ -12,7 +12,6 @@ import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet
 import ReactNative.Components (ListViewDataSource(), cloneWithRows, listView, listViewDataSource, text, textInput, touchableHighlight, view)
 import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), background, dataSource, onChangeText, onPress, onPressIn, onPressOut, onSubmitEditing, renderRow, renderSeparator, renderHeader)
 
-import qualified React.DOM as D
 import qualified React.DOM.Props as P
 
 data AppState = AppState {
@@ -199,7 +198,7 @@ render ctx = do
   (AppState state) <- readState ctx
   return $ 
     view [(appStyle "container")] [
-      text [appStyle "title"] [D.text "todos"],
+      text [appStyle "title"] "todos",
       view [appStyle "newTodoContainer"] [
         textInput [appStyle "newTodo", 
                    P.value state.newTodo,
@@ -216,19 +215,18 @@ render ctx = do
            filterButton ctx state.filter All, 
            filterButton ctx state.filter Active,
            filterButton ctx state.filter Completed],
-        text [appStyle "clearCompleted", onPress \_ -> transformState ctx clearCompleted] [D.text "Clear completed"]]]
+        text [appStyle "clearCompleted", onPress \_ -> transformState ctx clearCompleted] "Clear completed"]]
     where 
       todoRow (Todo id item completed) _ _ _ = touchableHighlight [onPress onPressFn] $ rowView
         where
           rowView = view [appStyle (if completed then "todoCompleted" else "todo")] [todoText]
-          todoText = text [appStyle (if completed then "todoTextCompleted" else "todoText")] [D.text item]
+          todoText = text [appStyle (if completed then "todoTextCompleted" else "todoText")] item
           onPressFn _ = transformState ctx (toggleTodoWithId (unsafeLog2 id))
           
 filterButton :: forall props. ReactThis props AppState -> Filter -> Filter -> ReactElement
 filterButton ctx activeFilter filter = 
   view [appStyle (if activeFilter == filter then "activeFilter" else "filter")] [
-    text [onPress \_ -> transformState ctx (filterTodos filter)] [
-       D.text filterText]]
+    text [onPress \_ -> transformState ctx (filterTodos filter)] filterText]
   where filterText = case filter of 
           All -> "All"
           Active -> "Active"
