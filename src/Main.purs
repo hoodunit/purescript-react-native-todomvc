@@ -55,21 +55,21 @@ appName = "PureScriptSampleApp"
 
 appStyleSheet :: StyleSheet
 appStyleSheet = createStyleSheet {
-  "container": {
+  container: {
      flex: 1,
      flexDirection: "column",
      backgroundColor: backgroundColor
      },
-  "title": {
+  title: {
      fontSize: 50,
      color: "rgba(175, 47, 47, 0.15)",
      textAlign: "center"
      },
-  "todoList": {
+  todoList: {
     flex: 1,
     flexDirection: "column"
     },
-  "newTodoContainer": {
+  newTodoContainer: {
     fontSize: 18,
     paddingHorizontal: 10,
     height: 56,
@@ -80,36 +80,30 @@ appStyleSheet = createStyleSheet {
     borderBottomColor: borderColor,
     borderBottomWidth: 1
     },
-  "newTodo": {
+  newTodo: {
     fontSize: 18,
     paddingHorizontal: 10,
     flex: 1,
     backgroundColor: todoBackgroundColor,
     textDecorationColor: fontColorFaded
     },
-  "todo": {
+  todo: {
     paddingHorizontal: 10,
     paddingVertical: 15,
     backgroundColor: todoBackgroundColor
     },
-  "todoCompleted": {
-    paddingHorizontal: 10,
-    paddingVertical: 15,
-    backgroundColor: todoBackgroundColor
-    },
-  "todoText": {
+  todoText: {
     fontSize: 18,
     color: fontColorDefault
     },
-  "todoTextCompleted": {
-    fontSize: 18,
+  todoTextCompleted: {
     color: fontColorFaded
     },
-  "separator": {
+  separator: {
     backgroundColor: borderColor,
     height: 1
     },
-  "bottomBar": {
+  bottomBar: {
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderTopColor: borderColor,
@@ -118,24 +112,22 @@ appStyleSheet = createStyleSheet {
     alignItems: "stretch",
     backgroundColor: todoBackgroundColor
     },
-  "filters": {
+  filters: {
     flexDirection: "row",
     alignItems: "stretch",
     flex: 1
     },
-  "filter": {
+  filter: {
     marginHorizontal: 5,
     padding: 5
     },
-  "activeFilter": {
-    marginHorizontal: 5,
+  activeFilter: {
     borderWidth: 1,
     borderColor: "rgba(175, 47, 47, 0.2)",
     borderStyle: "solid",
-    padding: 5,
     borderRadius: 3
     },
-  "clearCompleted": {
+  clearCompleted: {
     margin: 5
     }
   }
@@ -146,14 +138,17 @@ backgroundColor = "#F5F5F5"
 todoBackgroundColor = "#FFFFFF"
 borderColor = "#EDEDED"
   
-appStyle :: String -> P.Props
-appStyle key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
+style :: String -> P.Props
+style key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
+  
+styles :: Array String -> P.Props
+styles keys = P.unsafeMkProps "style" $ map (getStyleId appStyleSheet) keys
 
 getTodoId :: Todo -> Int
 getTodoId (Todo id _ _) = id
 
 todoSeparator :: N.RenderSeparatorFn
-todoSeparator sectionId rowId adjacentHighlighted = view [appStyle "separator"] []
+todoSeparator sectionId rowId adjacentHighlighted = view [style "separator"] []
 
 toggleTodoWithId :: Int -> AppState -> AppState
 toggleTodoWithId id (AppState state) = fromMaybe (AppState state) $ do
@@ -197,35 +192,35 @@ render :: forall props eff. Render props AppState eff
 render ctx = do
   (AppState state) <- readState ctx
   return $ 
-    view [(appStyle "container")] [
-      text [appStyle "title"] "todos",
-      view [appStyle "newTodoContainer"] [
-        textInput [appStyle "newTodo", 
+    view [(style "container")] [
+      text [style "title"] "todos",
+      view [style "newTodoContainer"] [
+        textInput [style "newTodo", 
                    P.value state.newTodo,
                    P.placeholder "What needs to be done?",
                    N.onChangeText \newTodo -> transformState ctx (updateNewTodo newTodo),
                    N.onSubmitEditing \_ -> transformState ctx addTodo]],
-      listView [appStyle "todoList",
+      listView [style "todoList",
                 N.renderRow todoRow,
                 N.renderSeparator todoSeparator,
-                N.renderHeader $ view [appStyle "separator"] [],
+                N.renderHeader $ view [style "separator"] [],
                 N.dataSource state.dataSource],
-      view [appStyle "bottomBar"] [
-        view [appStyle "filters"] [
+      view [style "bottomBar"] [
+        view [style "filters"] [
            filterButton ctx state.filter All, 
            filterButton ctx state.filter Active,
            filterButton ctx state.filter Completed],
-        text [appStyle "clearCompleted", N.onPress \_ -> transformState ctx clearCompleted] "Clear completed"]]
+        text [style "clearCompleted", N.onPress \_ -> transformState ctx clearCompleted] "Clear completed"]]
     where 
       todoRow (Todo id item completed) _ _ _ = touchableHighlight [N.onPress onPressFn] $ rowView
         where
-          rowView = view [appStyle (if completed then "todoCompleted" else "todo")] [todoText]
-          todoText = text [appStyle (if completed then "todoTextCompleted" else "todoText")] item
+          rowView = view [style "todo"] [todoText]
+          todoText = text [styles (if completed then ["todoText", "todoTextCompleted"] else ["todoText"])] item
           onPressFn _ = transformState ctx (toggleTodoWithId (unsafeLog2 id))
           
 filterButton :: forall props. ReactThis props AppState -> Filter -> Filter -> ReactElement
 filterButton ctx activeFilter filter = 
-  view [appStyle (if activeFilter == filter then "activeFilter" else "filter")] [
+  view [styles (if activeFilter == filter then ["filter", "activeFilter"] else ["filter"])] [
     text [N.onPress \_ -> transformState ctx (filterTodos filter)] filterText]
   where filterText = case filter of 
           All -> "All"
