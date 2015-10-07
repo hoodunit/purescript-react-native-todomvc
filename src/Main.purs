@@ -149,15 +149,15 @@ borderColor = "#EDEDED"
 appStyle :: String -> P.Props
 appStyle key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
 
-getId :: Todo -> Int
-getId (Todo id _ _) = id
+getTodoId :: Todo -> Int
+getTodoId (Todo id _ _) = id
 
 todoSeparator :: N.RenderSeparatorFn
 todoSeparator sectionId rowId adjacentHighlighted = view [appStyle "separator"] []
 
 toggleTodoWithId :: Int -> AppState -> AppState
 toggleTodoWithId id (AppState state) = fromMaybe (AppState state) $ do
-  index <- findIndex (((==) id) <<< getId) state.todos
+  index <- findIndex (((==) id) <<< getTodoId) state.todos
   newTodos <- modifyAt (unsafeLog2 index) toggleTodo state.todos
   return $ updateDataSource $ AppState $ state { todos = newTodos }
   
