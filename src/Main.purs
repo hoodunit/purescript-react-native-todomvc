@@ -10,8 +10,8 @@ import Data.Tuple (fst, snd)
 import React (ReactElement(), ReactThis(), Render(), createClass, readState, spec, transformState, writeState)
 import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
 import ReactNative.Components (ListViewDataSource(), cloneWithRows, listView, listViewDataSource, text, textInput, touchableHighlight, view)
-import ReactNative.Props (RenderSeparatorFn(), RenderHeaderFn(), background, dataSource, onChangeText, onPress, onPressIn, onPressOut, onSubmitEditing, renderRow, renderSeparator, renderHeader)
 
+import qualified ReactNative.Props as N
 import qualified React.DOM.Props as P
 
 data AppState = AppState {
@@ -152,7 +152,7 @@ appStyle key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
 getId :: Todo -> Int
 getId (Todo id _ _) = id
 
-todoSeparator :: RenderSeparatorFn
+todoSeparator :: N.RenderSeparatorFn
 todoSeparator sectionId rowId adjacentHighlighted = view [appStyle "separator"] []
 
 toggleTodoWithId :: Int -> AppState -> AppState
@@ -203,21 +203,21 @@ render ctx = do
         textInput [appStyle "newTodo", 
                    P.value state.newTodo,
                    P.placeholder "What needs to be done?",
-                   onChangeText \newTodo -> transformState ctx (updateNewTodo newTodo),
-                   onSubmitEditing \_ -> transformState ctx addTodo]],
+                   N.onChangeText \newTodo -> transformState ctx (updateNewTodo newTodo),
+                   N.onSubmitEditing \_ -> transformState ctx addTodo]],
       listView [appStyle "todoList",
-                renderRow todoRow,
-                renderSeparator todoSeparator,
-                renderHeader $ view [appStyle "separator"] [],
-                dataSource state.dataSource],
+                N.renderRow todoRow,
+                N.renderSeparator todoSeparator,
+                N.renderHeader $ view [appStyle "separator"] [],
+                N.dataSource state.dataSource],
       view [appStyle "bottomBar"] [
         view [appStyle "filters"] [
            filterButton ctx state.filter All, 
            filterButton ctx state.filter Active,
            filterButton ctx state.filter Completed],
-        text [appStyle "clearCompleted", onPress \_ -> transformState ctx clearCompleted] "Clear completed"]]
+        text [appStyle "clearCompleted", N.onPress \_ -> transformState ctx clearCompleted] "Clear completed"]]
     where 
-      todoRow (Todo id item completed) _ _ _ = touchableHighlight [onPress onPressFn] $ rowView
+      todoRow (Todo id item completed) _ _ _ = touchableHighlight [N.onPress onPressFn] $ rowView
         where
           rowView = view [appStyle (if completed then "todoCompleted" else "todo")] [todoText]
           todoText = text [appStyle (if completed then "todoTextCompleted" else "todoText")] item
@@ -226,7 +226,7 @@ render ctx = do
 filterButton :: forall props. ReactThis props AppState -> Filter -> Filter -> ReactElement
 filterButton ctx activeFilter filter = 
   view [appStyle (if activeFilter == filter then "activeFilter" else "filter")] [
-    text [onPress \_ -> transformState ctx (filterTodos filter)] filterText]
+    text [N.onPress \_ -> transformState ctx (filterTodos filter)] filterText]
   where filterText = case filter of 
           All -> "All"
           Active -> "Active"
