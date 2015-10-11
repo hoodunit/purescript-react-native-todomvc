@@ -146,6 +146,7 @@ style key = S.style $ S.getStyleId appStyleSheet key
 styles :: Array String -> P.Props
 styles keys = S.styles $ map (S.getStyleId appStyleSheet) keys
 
+
 toggleTodoWithId :: Int -> AppState -> AppState
 toggleTodoWithId id (AppState state) = fromMaybe (AppState state) $ do
   index <- findIndex (((==) id) <<< getTodoId) state.todos
@@ -196,6 +197,12 @@ filterButton ctx activeFilter filter =
           All -> "All"
           Active -> "Active"
           Completed -> "Completed"
+          
+todoRow ctx (Todo id item completed) _ _ _ = touchableHighlight [N.onPress onPressFn] $ rowView
+  where
+    rowView = view [style "todo"] [todoText]
+    todoText = text [styles (if completed then ["todoText", "todoTextCompleted"] else ["todoText"])] item
+    onPressFn _ = transformState ctx (toggleTodoWithId (unsafeLog2 id))
 
 render :: forall props eff. Render props AppState eff
 render ctx = do
@@ -210,7 +217,7 @@ render ctx = do
                    N.onChangeText \newTodo -> transformState ctx (updateNewTodo newTodo),
                    N.onSubmitEditing \_ -> transformState ctx addTodo]],
       listView [style "todoList",
-                N.renderRow todoRow,
+                N.renderRow $ todoRow ctx,
                 N.renderSeparator todoSeparator,
                 N.renderHeader $ view [style "separator"] [],
                 N.dataSource state.dataSource],
@@ -220,12 +227,6 @@ render ctx = do
            filterButton ctx state.filter Active,
            filterButton ctx state.filter Completed],
         text [style "clearCompleted", N.onPress \_ -> transformState ctx clearCompleted] "Clear completed"]]
-    where 
-      todoRow (Todo id item completed) _ _ _ = touchableHighlight [N.onPress onPressFn] $ rowView
-        where
-          rowView = view [style "todo"] [todoText]
-          todoText = text [styles (if completed then ["todoText", "todoTextCompleted"] else ["todoText"])] item
-          onPressFn _ = transformState ctx (toggleTodoWithId (unsafeLog2 id))
         
 foreign import unsafeLog :: forall p e. p -> Eff e Unit
 foreign import unsafeLog2 :: forall p. p -> p
