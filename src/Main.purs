@@ -25,6 +25,9 @@ data AppState = AppState {
 data Todo = Todo Int String Boolean
 instance todoEq :: Eq Todo where
   eq (Todo id1 item1 c1) (Todo id2 item2 c2) = (id1 == id2) && (item1 == item2) && (c1 == c2)
+
+getTodoId :: Todo -> Int
+getTodoId (Todo id _ _) = id
   
 data Filter = All | Active | Completed
 instance eqFilter :: Eq Filter where
@@ -145,12 +148,6 @@ style key = S.style $ S.getStyleId appStyleSheet key
 styles :: Array String -> P.Props
 styles keys = S.styles $ map (S.getStyleId appStyleSheet) keys
 
-getTodoId :: Todo -> Int
-getTodoId (Todo id _ _) = id
-
-todoSeparator :: N.RenderSeparatorFn
-todoSeparator sectionId rowId adjacentHighlighted = view [style "separator"] []
-
 toggleTodoWithId :: Int -> AppState -> AppState
 toggleTodoWithId id (AppState state) = fromMaybe (AppState state) $ do
   index <- findIndex (((==) id) <<< getTodoId) state.todos
@@ -174,7 +171,8 @@ clearCompleted (AppState state) = updateDataSource $ AppState $ state { todos = 
         
 filterTodos :: Filter -> AppState -> AppState
 filterTodos filter (AppState state) = updateDataSource $ AppState $ state { filter = filter }
-        
+
+
 todoOrdering :: Todo -> Todo -> Ordering
 todoOrdering (Todo _ _ true) (Todo _ _ false) = GT
 todoOrdering (Todo _ _ false) (Todo _ _ true) = LT
@@ -188,6 +186,18 @@ applyFilter :: Filter -> Todo -> Boolean
 applyFilter All _ = true
 applyFilter Active (Todo _ _ c) = not c
 applyFilter Completed (Todo _ _ c) = c
+
+todoSeparator :: N.RenderSeparatorFn
+todoSeparator sectionId rowId adjacentHighlighted = view [style "separator"] []
+          
+filterButton :: forall props. ReactThis props AppState -> Filter -> Filter -> ReactElement
+filterButton ctx activeFilter filter = 
+  view [styles (if activeFilter == filter then ["filter", "activeFilter"] else ["filter"])] [
+    text [N.onPress \_ -> transformState ctx (filterTodos filter)] filterText]
+  where filterText = case filter of 
+          All -> "All"
+          Active -> "Active"
+          Completed -> "Completed"
 
 render :: forall props eff. Render props AppState eff
 render ctx = do
@@ -218,15 +228,6 @@ render ctx = do
           rowView = view [style "todo"] [todoText]
           todoText = text [styles (if completed then ["todoText", "todoTextCompleted"] else ["todoText"])] item
           onPressFn _ = transformState ctx (toggleTodoWithId (unsafeLog2 id))
-          
-filterButton :: forall props. ReactThis props AppState -> Filter -> Filter -> ReactElement
-filterButton ctx activeFilter filter = 
-  view [styles (if activeFilter == filter then ["filter", "activeFilter"] else ["filter"])] [
-    text [N.onPress \_ -> transformState ctx (filterTodos filter)] filterText]
-  where filterText = case filter of 
-          All -> "All"
-          Active -> "Active"
-          Completed -> "Completed"
         
 foreign import unsafeLog :: forall p e. p -> Eff e Unit
 foreign import unsafeLog2 :: forall p. p -> p
