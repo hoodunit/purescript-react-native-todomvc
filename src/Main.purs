@@ -8,11 +8,12 @@ import Data.Int (fromString)
 import Data.Maybe (Maybe(), fromMaybe)
 import Data.Tuple (fst, snd)
 import React (ReactElement(), ReactThis(), Render(), createClass, readState, spec, transformState, writeState)
-import ReactNative (StyleId(), StyleSheet(), registerComponent, createStyleSheet, getStyleId)
+import ReactNative (registerComponent)
 import ReactNative.Components (ListViewDataSource(), cloneWithRows, listView, listViewDataSource, text, textInput, touchableHighlight, view)
 
 import qualified ReactNative.Props as N
 import qualified React.DOM.Props as P
+import qualified ReactNative.Styles as S
 
 data AppState = AppState {
   nextId :: Int, 
@@ -53,8 +54,8 @@ initialTodos = [
 
 appName = "PureScriptSampleApp"
 
-appStyleSheet :: StyleSheet
-appStyleSheet = createStyleSheet {
+appStyleSheet :: S.StyleSheet
+appStyleSheet = S.createStyleSheet {
   container: {
      flex: 1,
      flexDirection: "column",
@@ -139,10 +140,10 @@ todoBackgroundColor = "#FFFFFF"
 borderColor = "#EDEDED"
   
 style :: String -> P.Props
-style key = P.unsafeMkProps "style" $ getStyleId appStyleSheet key
+style key = S.style $ S.getStyleId appStyleSheet key
   
 styles :: Array String -> P.Props
-styles keys = P.unsafeMkProps "style" $ map (getStyleId appStyleSheet) keys
+styles keys = S.styles $ map (S.getStyleId appStyleSheet) keys
 
 getTodoId :: Todo -> Int
 getTodoId (Todo id _ _) = id
