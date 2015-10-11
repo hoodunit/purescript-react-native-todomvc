@@ -55,8 +55,6 @@ initialTodos = [
   Todo 17 "Re-focus input field when adding todo" false
 ]
 
-appName = "PureScriptSampleApp"
-
 appStyleSheet :: S.StyleSheet
 appStyleSheet = S.createStyleSheet {
   container: {
@@ -234,9 +232,8 @@ foreign import unsafeLog2 :: forall p. p -> p
   
 main = do
   log "Running app"
-  registerComponent appName component
+  registerComponent "PureScriptSampleApp" component
   where
-    component = createClass viewSpec
-    viewSpec = (spec initialState render)
+    component = createClass $ spec initialState render
     dataSource = listViewDataSource initialTodos
     initialState = updateDataSource $ AppState { nextId: 18, newTodo: "", todos: initialTodos, dataSource: dataSource, filter: All }
