@@ -4,6 +4,7 @@ import Prelude
 import Control.Monad.Eff (Eff())
 import Control.Monad.Eff.Console (log)
 import Data.Array ((:), concat, filter, findIndex, length, modifyAt, range, sortBy, zip)
+import Data.Generic (Generic, gEq)
 import Data.Int (fromString)
 import Data.Maybe (Maybe(), fromMaybe)
 import Data.Tuple (fst, snd)
@@ -22,9 +23,13 @@ data AppState = AppState {
   dataSource :: ListViewDataSource, 
   filter :: Filter
   }
+
 data Todo = Todo Int String Boolean
-instance todoEq :: Eq Todo where
-  eq (Todo id1 item1 c1) (Todo id2 item2 c2) = (id1 == id2) && (item1 == item2) && (c1 == c2)
+
+derive instance genericTodo :: Generic Todo
+
+instance eqTodo :: Eq Todo where
+  eq = gEq
 
 getTodoId :: Todo -> Int
 getTodoId (Todo id _ _) = id
