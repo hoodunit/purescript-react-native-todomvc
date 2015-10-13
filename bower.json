@@ -19,6 +19,7 @@
     "purescript-react-native": "7b809ce23abf1fd6566b069ce4e009587de33c33",
     "purescript-arrays": "~0.4.2",
     "purescript-integers": "~0.2.1",
-    "purescript-maybe": "~0.3.4"
+    "purescript-maybe": "~0.3.4",
+    "purescript-generics": "~0.6.1"
   }
 }
