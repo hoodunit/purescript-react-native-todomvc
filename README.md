@@ -1,6 +1,6 @@
-## PureScript on React Native - Sample App
+## PureScript on React Native - TodoMVC
 
-This is a sample app showing how to use PureScript on React Native. It has only been tested on Android but may also work for iOS. This duplicates the simple React Native example app found from the [React Native tutorial](https://facebook.github.io/react-native/doc/tutorial.html#content).
+This is a todo app for Android in the style of [TodoMVC](http://todomvc.com) using PureScript wrappers for React Native. It has only been tested on Android but may, in theory, work for iOS with small changes.
 
 To install and run the app:
 
