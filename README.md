@@ -2,6 +2,8 @@
 
 This is a todo app for Android in the style of [TodoMVC](http://todomvc.com) using PureScript wrappers for React Native. It has only been tested on Android but may, in theory, work for iOS with small changes.
 
+<img src="screenshot.png" />
+
 To install and run the app:
 
 1. Install React Native and the Android SDK tools.
