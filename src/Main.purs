@@ -226,7 +226,9 @@ render ctx = do
            filterButton ctx state.filter All, 
            filterButton ctx state.filter Active,
            filterButton ctx state.filter Completed],
-        text [style "clearCompleted", N.onPress \_ -> transformState ctx clearCompleted] "Clear completed"]]
+        text [style "clearCompleted", 
+              N.onPress \_ -> transformState ctx clearCompleted] 
+             "Clear completed"]]
         
 foreign import unsafeLog :: forall p e. p -> Eff e Unit
 foreign import unsafeLog2 :: forall p. p -> p
@@ -237,4 +239,8 @@ main = do
   where
     component = createClass $ spec initialState render
     dataSource = listViewDataSource initialTodos
-    initialState = updateDataSource $ AppState { nextId: 18, newTodo: "", todos: initialTodos, dataSource: dataSource, filter: All }
+    initialState = updateDataSource $ AppState { nextId: 18, 
+                                                 newTodo: "", 
+                                                 todos: initialTodos, 
+                                                 dataSource: dataSource, 
+                                                 filter: All }
