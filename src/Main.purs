@@ -61,83 +61,83 @@ initialTodos = [
 ]
 
 appStyleSheet :: S.StyleSheet
-appStyleSheet = S.createStyleSheet {
-  container: {
-     flex: 1,
-     flexDirection: "column",
-     backgroundColor: backgroundColor
-     },
-  title: {
-     fontSize: 50,
-     color: "rgba(175, 47, 47, 0.15)",
-     textAlign: "center"
-     },
-  todoList: {
-    flex: 1,
-    flexDirection: "column"
-    },
-  newTodoContainer: {
-    fontSize: 18,
-    paddingHorizontal: 10,
-    height: 56,
-    backgroundColor: todoBackgroundColor,
-    textDecorationColor: fontColorFaded,
-    borderTopColor: borderColor,
-    borderTopWidth: 1,
-    borderBottomColor: borderColor,
-    borderBottomWidth: 1
-    },
-  newTodo: {
-    fontSize: 18,
-    paddingHorizontal: 10,
-    flex: 1,
-    backgroundColor: todoBackgroundColor,
-    textDecorationColor: fontColorFaded
-    },
-  todo: {
-    paddingHorizontal: 10,
-    paddingVertical: 15,
-    backgroundColor: todoBackgroundColor
-    },
-  todoText: {
-    fontSize: 18,
-    color: fontColorDefault
-    },
-  todoTextCompleted: {
-    color: fontColorFaded
-    },
-  separator: {
-    backgroundColor: borderColor,
-    height: 1
-    },
-  bottomBar: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderTopColor: borderColor,
-    borderTopWidth: 1,
-    flexDirection: "row",
-    alignItems: "stretch",
-    backgroundColor: todoBackgroundColor
-    },
-  filters: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    flex: 1
-    },
-  filter: {
-    marginHorizontal: 5,
-    padding: 5
-    },
-  activeFilter: {
-    borderWidth: 1,
-    borderColor: "rgba(175, 47, 47, 0.2)",
-    borderStyle: "solid",
-    borderRadius: 3
-    },
-  clearCompleted: {
-    margin: 5
-    }
-  }
+appStyleSheet = S.createStyleSheet [
+  S.Style "container" [
+     S.flex 1.0,
+     S.flexDirection S.Column,
+     S.backgroundColor backgroundColor
+     ],
+  S.Style "title" [
+     S.fontSize 50.0,
+     S.color "rgba(175, 47, 47, 0.15)",
+     S.textAlign S.TextAlignCenter
+     ],
+  S.Style "todoList" [
+    S.flex 1.0,
+    S.flexDirection S.Column
+    ],
+  S.Style "newTodoContainer" [
+    S.fontSize 18.0,
+    S.paddingHorizontal 10.0,
+    S.height 56.0,
+    S.backgroundColor todoBackgroundColor,
+    S.textDecorationColor fontColorFaded,
+    S.borderTopColor borderColor,
+    S.borderTopWidth 1.0,
+    S.borderBottomColor borderColor,
+    S.borderBottomWidth 1.0
+    ],
+  S.Style "newTodo" [
+    S.fontSize 18.0,
+    S.paddingHorizontal 10.0,
+    S.flex 1.0,
+    S.backgroundColor todoBackgroundColor,
+    S.textDecorationColor fontColorFaded
+    ],
+  S.Style "todo" [
+    S.paddingHorizontal 10.0,
+    S.paddingVertical 15.0,
+    S.backgroundColor todoBackgroundColor
+    ],
+  S.Style "todoText" [
+    S.fontSize 18.0,
+    S.color fontColorDefault
+    ],
+  S.Style "todoTextCompleted" [
+    S.color fontColorFaded
+    ],
+  S.Style "separator" [
+    S.backgroundColor borderColor,
+    S.height 1.0
+    ],
+  S.Style "bottomBar" [
+    S.paddingVertical 10.0,
+    S.paddingHorizontal 15.0,
+    S.borderTopColor borderColor,
+    S.borderTopWidth 1.0,
+    S.flexDirection S.Row,
+    S.alignItems S.AlignItemsStretch,
+    S.backgroundColor todoBackgroundColor
+    ],
+  S.Style "filters" [
+    S.flexDirection S.Row,
+    S.alignItems S.AlignItemsStretch,
+    S.flex 1.0
+    ],
+  S.Style "filter" [
+    S.marginHorizontal 5.0,
+    S.padding 5.0
+    ],
+  S.Style "activeFilter" [
+    S.borderWidth 1.0,
+    S.borderColor "rgba(175, 47, 47, 0.2)",
+    S.borderStyle S.BorderSolid,
+    S.borderRadius 3.0
+    ],
+  S.Style "clearCompleted" [
+    S.margin 5.0
+    ]
+  ]
 
 fontColorDefault = "#000000" 
 fontColorFaded = "#D9D9D9" 
