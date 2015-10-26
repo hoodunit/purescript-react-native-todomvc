@@ -2,7 +2,7 @@ module Main where
 
 import Prelude
 import Control.Monad.Eff (Eff())
-import Control.Monad.Eff.Console (log)
+import Control.Monad.Eff.Console (CONSOLE(), log)
 import Data.Array ((:), concat, filter, findIndex, length, modifyAt, range, sortBy, zip)
 import Data.Generic (Generic, gEq)
 import Data.Int (fromString)
@@ -202,7 +202,7 @@ filterButton ctx activeFilter filter =
           All -> "All"
           Active -> "Active"
           Completed -> "Completed"
-          
+
 todoRow ctx (Todo id item completed) _ _ _ = touchableHighlight [N.onPress onPressFn] $ rowView
   where
     rowView = view [style "todo"] [todoText]
@@ -238,6 +238,7 @@ render ctx = do
 foreign import unsafeLog :: forall p e. p -> Eff e Unit
 foreign import unsafeLog2 :: forall p. p -> p
   
+main :: Eff (console :: CONSOLE) Unit
 main = do
   log "Running app"
   registerComponent "PureScriptSampleApp" component
